@@ -49,7 +49,7 @@ For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`:
    
    {analysis content}
    ```
-4. Prepend the entry into `$GITHUB_WORKSPACE/would/{category}-issue-v1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
+4. Prepend the entry into `$GITHUB_WORKSPACE/would/{CATEGORY}-ISSUE-V1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
 
 #### 3b. ASSET analysis
 1. Read `$root/-MUST/{category}-ASSET.md` — this is your analysis instruction/prompt
@@ -60,7 +60,7 @@ For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`:
    
    {analysis content}
    ```
-4. Prepend the entry into `$GITHUB_WORKSPACE/would/{category}-asset-v1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
+4. Prepend the entry into `$GITHUB_WORKSPACE/would/{CATEGORY}-ASSET-V1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
 
 ### 4. Commit and push
 
@@ -69,7 +69,7 @@ Run in bash from `$GITHUB_WORKSPACE`:
 cd "$GITHUB_WORKSPACE"
 git config user.name "would-update"
 git config user.email "admin@toigroup.co.nz"
-git add migrate-ISSUE.md migrate-ASSET.md price-ISSUE.md price-ASSET.md recovery-ISSUE.md recovery-ASSET.md usage-ISSUE.md usage-ASSET.md instruction-ISSUE.md instruction-ASSET.md
+git add would/MIGRATE-ISSUE-V1.md would/MIGRATE-ASSET-V1.md would/PRICE-ISSUE-V1.md would/PRICE-ASSET-V1.md would/RECOVERY-ISSUE-V1.md would/RECOVERY-ASSET-V1.md would/USAGE-ISSUE-V1.md would/USAGE-ASSET-V1.md would/INSTRUCTION-ISSUE-V1.md would/INSTRUCTION-ASSET-V1.md
 git commit -m "would-update: $(date '+%Y-%m-%d %H:%M') codebase analysis"
 git push
 ```
