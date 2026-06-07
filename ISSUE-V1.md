@@ -10,6 +10,19 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-07 16:00 → skill was reading wrong branch — zipball/latest unresolved
+
+`zipball/latest` in the skill was an ambiguous ref. GitHub treats it as a literal branch/tag name "latest" — since no such ref exists on `ts-toifood-back`, behavior was undefined (likely falling back to default branch `main`). `main` has no `-MUST/` directory, so the 5 standard category prompts were not being read.
+
+**Fix:** skill now uses `compare/main...{branch}` per branch to find creation date, picks newest created. First successful detection: `1-1-1` (created 2026-06-07), which has `-MUST/`.
+
+## ISSUE:toifood 2026-06-07 16:00 → two clones of ts-toifood-back found locally
+
+Two local clones of `jayreck996/ts-toifood-back` exist:
+- `~/ts-toifood-back` — branch `1-1-1`, active service (PM2 runs from here), has `-MUST/`
+- `~/Documents/GitHub/ts-toifood-back` — branch `main`, stale reference clone, no `-MUST/`
+
+Not a conflict — different branches, different purposes. `~/ts-toifood-back` is the live copy.
 ## ISSUE:toifood 2026-06-07 13:58 → runner group blocked public repos — fixed before first successful run
 
 **Symptom:** Self-hosted runner online and listening but not picking up queued jobs from `ts-back`.

@@ -10,6 +10,28 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-07 16:00 → skill uses branch creation date to find newest ts-toifood-back branch
+
+Skill (`would-update.md`) now detects the newest created branch of `ts-toifood-back` using the GitHub compare API (`compare/main...{branch}`). The last unique commit on each branch gives its effective creation date — the branch with the most recent creation date wins.
+
+| Before | After |
+|---|---|
+| `zipball/latest` — ambiguous, resolved to unknown ref | `compare/main...{branch}` per branch → pick newest created |
+| Could silently read wrong branch | Always reads most recently created branch |
+
+Skips `main` in the comparison loop. Works automatically when new branches are created — no config change needed.
+
+## ASSET:toifood 2026-06-07 16:00 → ts-toifood-back (branch 1-1-1) file naming aligned to /-toifood convention
+
+| Before | After |
+|---|---|
+| `-ASSET-v4.md` | `ASSET-V1.md` |
+| `-ISSUE-v4.md` | `ISSUE-V1.md` |
+| `-WOULD/` (directory) | `would/` |
+| `-WOULD/-ASSET-v1/v2/v3.md` | `would/ASSET-V1/V2/V3.md` |
+| `-WOULD/-ISSUE-v0/v1/v2/v3.md` | `would/ISSUE-V0/V1/V2/V3.md` |
+
+`-MUST/` kept as-is — skill reads from this path explicitly.
 ## ASSET:toifood 2026-06-07 14:16 → ts-back file/folder structure aligned to toiflow/ts-anz pattern
 
 Four JS files + `would/` output folder now mirrors ts-anz exactly.
