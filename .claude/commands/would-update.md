@@ -18,7 +18,20 @@ suffix="${ARGUMENTS#ts-}"
 zipPath="/tmp/toifood-source.zip"
 extractPath="/tmp/toifood-source"
 rm -rf "$extractPath"
-gh api "repos/jayreck996/ts-toifood-${suffix}/zipball/latest" > "$zipPath"
+
+# Find the branch with the most recent commit
+latestBranch=""
+latestDate=""
+for branch in $(gh api "repos/jayreck996/ts-toifood-${suffix}/branches" --jq '.[].name'); do
+  date=$(gh api "repos/jayreck996/ts-toifood-${suffix}/commits?sha=${branch}&per_page=1" --jq '.[0].commit.committer.date' 2>/dev/null)
+  if [[ "$date" > "$latestDate" ]]; then
+    latestDate="$date"
+    latestBranch="$branch"
+  fi
+done
+echo "Latest branch: $latestBranch ($latestDate)"
+
+gh api "repos/jayreck996/ts-toifood-${suffix}/zipball/${latestBranch}" > "$zipPath"
 unzip -q "$zipPath" -d "$extractPath"
 root=$(find "$extractPath" -mindepth 1 -maxdepth 1 -type d | head -1)
 echo "$root"
