@@ -10,6 +10,42 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-07 13:58 → pipeline fully operational — end-to-end summary
+
+**Status:** Live. First run succeeded 2026-06-07 13:55. Next run: Monday 2026-06-09 18:00 NZST.
+
+**Full infrastructure state:**
+
+| Component | Detail |
+|---|---|
+| Org | `toifood` (GitHub free plan, all repos public) |
+| Runner | `mac-mini` — `jayreck` account, `~/actions-runner/` v2.334.0 |
+| PM2 process | `toifood-runner` (id 7) — alongside `cloudflare-tunnel`, `toigroup-tunnel`, `toifood-back`, `postgres`, `redis`, `slack-bot` |
+| Runner group | Default — `visibility: all`, `allows_public_repositories: true` |
+| Claude auth | Claude Pro OAuth, `~/.claude/` persisted under `jayreck` |
+| Org secret | `TOIFOOD_CROSS_REPO_TOKEN` — `repo` + `workflow` scopes, used for checkout + git push |
+| Schedule | `0 6 * * 1` — weekly Monday 06:00 UTC = 18:00 NZST |
+
+**Repos:**
+| Repo | Role |
+|---|---|
+| `toifood/-toifood` | Reusable workflows + skill (`would-update.md`) + org docs |
+| `toifood/ts-back` | Target — category docs updated weekly by skill |
+
+**Skill flow (`would-update ts-back`):**
+1. `gh api zipball jayreck996/ts-toifood-back@latest` → `/tmp/`
+2. Read `README.md`, `package.json`, `prisma/schema.prisma`, `src/` tree
+3. Read 10 `-MUST/` instruction prompts from source repo
+4. Generate 10 analyses under Claude Pro
+5. Prepend entries to 10 category docs in `$GITHUB_WORKSPACE`
+6. `git commit + push` from workspace
+7. `rm -rf /tmp/toifood-source*`
+
+**Troubleshooting log (first run):**
+- Runner auto-updated v2.325→v2.334 on first pickup → session conflict → removed + re-registered
+- Runner group `allows_public_repositories` was false → jobs silently queued → patched via API
+- Both resolved before first successful run
+
 ## ASSET:toifood 2026-06-07 13:58 → schedule set to weekly Monday 6pm NZST
 
 `would-update.yml` cron updated from daily `0 18 * * *` → weekly `0 6 * * 1` (Monday 06:00 UTC = Monday 18:00 NZST).
