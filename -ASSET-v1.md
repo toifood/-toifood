@@ -10,6 +10,60 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-07 → pipeline architecture — Claude skill on Mac Mini self-hosted runner
+
+**Flow:**
+```
+GitHub Actions schedule (daily 06:00)
+  → would-update.yml (ts-back) — runs-on: [self-hosted, mac-mini]
+    → checkout ts-back + -toifood
+    → cp .toifood/.claude/commands/would-update.md ~/.claude/commands/
+    → claude --dangerously-skip-permissions --print "/would-update ts-back"
+        → gh api zipball ts-toifood-back@latest → /tmp/
+        → read -MUST/ prompts + codebase context
+        → generate 10 analyses (migrate/price/recovery/usage/instruction × ISSUE/ASSET)
+        → prepend entries to category docs in ts-back
+        → git commit + push
+        → rm -rf /tmp/toifood-source*
+```
+
+**Mac Mini — what already exists:**
+| Component | Status |
+|---|---|
+| `jayagent` account + PM2 | ✅ Running |
+| cloudflared Cloudflare tunnel | ✅ Running |
+| Friday 3am reboot + auto-recovery | ✅ Configured |
+| Node.js (for npm/Claude Code) | ✅ Available |
+
+**What needs to be built:**
+| Step | Action |
+|---|---|
+| 1 | Register self-hosted runner: `toifood` org → Settings → Actions → Runners → New → macOS ARM64; install via `./config.sh` + `./svc.sh install` on Mac Mini (`jayagent`) |
+| 2 | Install Claude Code: `npm install -g @anthropic-ai/claude-code`; auth: `claude` → OAuth → Claude Pro login |
+| 3 | Update `would-update.md` skill: replace PowerShell with bash (`curl`, `unzip`, `/tmp/`, `$GITHUB_WORKSPACE`) |
+| 4 | Update `would-update.yml`: replace `runs-on: ubuntu-latest` → `runs-on: [self-hosted, mac-mini]`; add skill copy step |
+
+**Secrets required:**
+| Secret | Scope | Status |
+|---|---|---|
+| `TOIFOOD_CROSS_REPO_TOKEN` | toifood org | ✅ Set |
+
+No new secrets needed — Claude Pro auth and `gh` auth are stored on-machine under `jayagent`.
+
+**Risk table:**
+| Risk | Mitigation |
+|---|---|
+| Claude Pro auth expires | Job fails loudly → re-run `claude` interactively on Mac Mini |
+| Mac Mini offline | Jobs queue → run when runner comes back online |
+| Friday reboot vs job timing | Reboot 03:00, job 06:00 — no overlap |
+
+**Comparison with toiflow:**
+| | toiflow | toifood |
+|---|---|---|
+| LLM | Ollama `qwen2.5:7b` | Claude Pro (via CLI) |
+| Runner | GitHub hosted | Self-hosted (Mac Mini) |
+| LLM auth | `OLLAMA_SECRET` WAF header | Claude Pro OAuth on Mac Mini |
+| Cost | Free | Free (Claude Pro already paid) |
 ## ASSET:toifood 2026-06-07 → Claude skill execution model confirmed
 
 | Layer | Where it runs | Billing |
