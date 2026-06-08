@@ -10,6 +10,12 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-08 → would-update-csv.js uses → (→) in regex — encoding must be preserved
+
+`ts-back/would-update-csv.js` line 37 uses `→` (U+2192) as a literal character in the headline-extraction regex. If this file is edited in an editor that mishandles UTF-8, the character will silently corrupt and the CSV step will fail with "No headlines found" on every run.
+
+Fix committed `5f41d91`. When editing this file, verify the arrow is byte sequence `e2 86 92` (not a multi-byte garbled variant).
+
 ## ASSET:toifood 2026-06-08 → architectural identity — toifood is repo/personal-context-based
 
 `toifood` sub-repos analyse internal data — source code, user behaviour, product repos. This distinguishes them from `toiflow` sub-repos which analyse external cloud data.

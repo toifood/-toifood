@@ -10,6 +10,12 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-08 → RESOLVED — would-update-csv.js regex had corrupted → bytes, CSV log never written
+
+`ts-back/would-update-csv.js` headline regex contained double-encoded UTF-8 bytes instead of the correct `→` (U+2192). Every `would-update` run succeeded at analysis + commit but failed at the CSV log step with "No headlines found" — exit code 1.
+
+Fix: replaced corrupted byte sequence with correct `→` in regex. Pushed `5f41d91` to `toifood/ts-back`. Run `27121772176` confirmed both jobs passing.
+
 ## ISSUE:toifood 2026-06-08 → RESOLVED — document structure live
 
 All pending actions completed:
