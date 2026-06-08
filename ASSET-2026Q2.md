@@ -10,6 +10,20 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-08 → architectural identity — toifood is repo/personal-context-based
+
+`toifood` sub-repos analyse internal data — source code, user behaviour, product repos. This distinguishes them from `toiflow` sub-repos which analyse external cloud data.
+
+| | `toifood` | `toiflow` |
+|---|---|---|
+| **Context** | Repo / user / personal | Cloud / external world |
+| **Runner** | Self-hosted Mac Mini | `ubuntu-latest` |
+| **Engine** | Claude Code skill | Ollama via tunnel |
+| **Cadence** | Weekly | Daily |
+| **Org pipeline** | Product health across ts-toifood-back/front/web | Org activity (PRs, workflows, repo stats) |
+
+**Rule:** Sub-repos in `toifood` read from codebases and user context. See `toiflow/-toiflow` ASSET for full comparison table.
+
 ## ASSET:toifood 2026-06-08 → would-update-timing.yml is temporary — retires when would-update.yml is built
 
 `would-update-timing.yml` (quarterly cron) is a placeholder until the pipeline is defined. Once built, timing becomes job 1 inside `would-update.yml` (daily) — same pattern as `ts-*` repos. No commit conflict: timing commits empty files first, pipeline writes content second, sequential in the same run. See `toiflow/-toiflow` ASSET for full pattern detail.
