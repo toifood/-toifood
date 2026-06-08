@@ -10,6 +10,17 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-08 → document structure live — could/ would/ 2026Q2 files created
+
+`would-update.yml` triggered. Timing job created all quarterly files. Structure confirmed.
+
+| Path | Status |
+|---|---|
+| `ASSET-2026Q2.md` / `ISSUE-2026Q2.md` | ✅ |
+| `could/CONTENT-ASSET-2026Q2.md` | ✅ |
+| `could/CONTENT-ISSUE-2026Q2.md` | ✅ |
+| `would/LOG-METRIC-2026Q2.csv` | ✅ |
+| `.github/workflows/would-update.yml` | ✅ quarterly cron `0 0 1 1,4,7,10 *` |
 ## ASSET:toifood 2026-06-08 → -toifood adopts unified document structure — container + pipeline
 
 **Decision:** `-toifood` joins the automated documents factory. Same structure as `-toiflow` and all `ts-*` repos.

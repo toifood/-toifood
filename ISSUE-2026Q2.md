@@ -10,6 +10,14 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-08 → RESOLVED — document structure live
+
+All pending actions completed:
+- [x] `ASSET-V1.md` → `ASSET-2026Q2.md`, `ISSUE-V1.md` → `ISSUE-2026Q2.md`
+- [x] `would-update.yml` added with quarterly cron
+- [x] `could/` and `would/` quarterly files created
+- [ ] Content type undecided — org activity vs business docs — open
+
 ## ISSUE:toifood 2026-06-08 → pending — full document structure setup
 
 **Pending actions:**
