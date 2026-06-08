@@ -10,6 +10,23 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-08 → -toifood adopts unified document structure — container + pipeline
+
+**Decision:** `-toifood` joins the automated documents factory. Same structure as `-toiflow` and all `ts-*` repos.
+
+**Structure:**
+```
+-toifood/
+├── .github/workflows/would-update.yml   ← quarterly cron, timing-only until pipeline defined
+├── .claude/commands/would-update.md     ← shared skill (existing, retained)
+├── ASSET-{quarter}.md / ISSUE-{quarter}.md
+├── could/CONTENT-ASSET-{quarter}.md
+├── could/CONTENT-ISSUE-{quarter}.md
+└── would/LOG-METRIC-{quarter}.csv
+```
+
+**Removed:** `would/DISCOVER-METRIC.csv` — no longer needed.
+**Content type:** default CONTENT, undecided between org activity summaries vs business docs (price, usage).
 ## ASSET:toifood 2026-06-08 → toifood-dev org live — org split between pipeline and prod source
 
 `toifood-dev` org created at https://github.com/toifood-dev. `-toifood-dev` repo initialised as org config/docs layer.

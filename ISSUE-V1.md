@@ -10,6 +10,13 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-08 → pending — full document structure setup
+
+**Pending actions:**
+- [ ] Rename `ASSET-V1.md` → `ASSET-2026Q2.md`, `ISSUE-V1.md` → `ISSUE-2026Q2.md`
+- [ ] Add `would-update.yml` with quarterly cron calling `toiflow/-toiflow/.github/workflows/must-update-timing.yml@main`
+- [ ] Trigger timing job to create `could/` and `would/` quarterly files
+- [ ] Decide content type: org activity summaries vs business docs (price, usage) — rename CONTENT category when decided
 ## ISSUE:toifood 2026-06-08 → toifood-dev org created — prod source repos to migrate from jayreck996
 
 `toifood-dev` GitHub org created 2026-06-08. Houses production source code repos (`ts-toifood-back`, `ts-toifood-front`, `ts-toifood-web`), separate from `toifood` (pipeline/analysis).
