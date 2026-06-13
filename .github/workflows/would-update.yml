@@ -20,7 +20,7 @@ jobs:
           BODY=$(jq -n --arg q "${{ inputs.quarter_override }}" '{"quarter_override": $q}')
           RESPONSE=$(curl -sf \
             -X POST https://local.toigroup.co.nz/would-update \
-            -H "x-secret: ${{ secrets.OLLAMA_SECRET }}" \
+            -H "x-secret: ${{ secrets.TOIGROUP_SECRET }}" \
             -H "X-Token: ${{ secrets.MACMINI_TRIGGER_TOKEN }}" \
             -H "Content-Type: application/json" \
             --max-time 600 \
