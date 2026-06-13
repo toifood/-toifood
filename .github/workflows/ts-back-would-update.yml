@@ -1,0 +1,58 @@
+name: ts-back-would-update
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      quarter_override:
+        description: 'Override quarter (e.g. 2026Q3) for testing'
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  timing:
+    uses: toiflow/-toiflow/.github/workflows/must-update-timing.yml@main
+    secrets: inherit
+    with:
+      quarter_override: ${{ inputs.quarter_override }}
+      categories: ANALYSIS,BUG,INSTRUCTION,MIGRATE,PRICE,RECOVERY,USAGE
+
+  update:
+    needs: timing
+    runs-on: [self-hosted, mac-mini]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOIFOOD_CROSS_REPO_TOKEN }}
+      - name: Install skill
+        run: |
+          mkdir -p ~/.claude/commands
+          cp .claude/commands/would-update.md ~/.claude/commands/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Analyse
+        working-directory: ts-back
+        env:
+          GH_TOKEN: ${{ secrets.TOIFOOD_CROSS_REPO_TOKEN }}
+          QUARTER_OVERRIDE: ${{ inputs.quarter_override }}
+        run: node would-update-md.js
+      - name: Write to docs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          QUARTER_OVERRIDE: ${{ inputs.quarter_override }}
+        run: node ts-back/would-update-content.js
+      - name: Update CSV log
+        env:
+          QUARTER_OVERRIDE: ${{ inputs.quarter_override }}
+        run: |
+          node ts-back/would-update-csv.js
+          git config user.name "would-update"
+          git config user.email "admin@toigroup.co.nz"
+          git add ts-back/would/
+          git diff --cached --quiet || git commit -m "would-update: log $(date '+%Y-%m-%d')"
+          git pull --rebase && git push

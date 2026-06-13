@@ -1,0 +1,94 @@
+ASSET LOG - MIGRATE
+INSTRUCTION FOR AI MODEL:
+
+ALWAYS ADD NEW ASSET ENTRIES AT THE TOP, DIRECTLY BELOW THIS HEADER.
+
+NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES.
+
+REQUIRED FORMAT FOR EACH ASSET ENTRY:
+
+## ASSET:migrate {YYYY-MM-DD HH:MM} → {CONTENT}
+
+####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:migrate 2026-06-09 18:16 → @@unique constraints on three models provide DB-level idempotency; all 13 models have explicit onDelete directives; enum-only schema additions are zero-downtime safe
+
+**DB-level idempotency guards:**
+- `PantryItem @@unique([userId, ingredient])` — duplicate pantry entries fail at the DB layer with P2002, not at the application layer; consistent regardless of how many insert paths exist
+- `RecipeReview @@unique([userId, recipeId])` — one review per recipe per user is enforced without application-layer coordination
+- `UserInsight @@unique([userId, category])` — single active insight per category guaranteed at the DB level; upsert semantics are safe to retry as long as P2002 is caught
+
+**Explicit onDelete on all foreign keys:**
+- Every FK in the 13-model schema has an explicit `onDelete` directive (Cascade or Restrict) — no Prisma defaults are relied upon. This means schema intent is visible in `schema.prisma` without checking Prisma version behaviour.
+- The three models that use manual delete (`DietaryPreference`, `PasswordResetToken`, `EmailVerificationToken`) are documented in `DELETE /users/me` — the decision is intentional and visible.
+
+**Zero-downtime enum extension:**
+- `CookStatus`, `UserRole`, `FlowTrigger`, `FlowStepType` — all current values are stable; no renames or removals. Adding a new enum value (e.g., `PAUSED` to CookStatus) requires only a Prisma migration with no backfill, making it safe to apply with zero application downtime.
+
+## ASSET:migrate 2026-06-09 18:03 → Prisma migrations folder confirmed present; CookRecord + UserInsight cascade cleanly from User; PantryItem deduplication enforced at DB level
+
+**Migration infrastructure:**
+- `prisma/migrations/` folder exists and is tracked — `prisma migrate deploy` can be run deterministically in a fresh environment
+- `prisma generate` regenerates the Prisma Client from the current schema — no manual type sync required
+- Schema changes are version-controlled alongside application code, so rollbacks restore both code and schema definition in sync
+
+**Cascade delete correctness for new models:**
+- `UserInsight → User`: `onDelete: Cascade` — user deletion automatically removes all AI-generated insights
+- `CookRecord → User`: `onDelete: Cascade` — cook sessions cleaned up on user delete
+- `CookRecord → Recipe`: `onDelete: Cascade` — deleting a recipe removes associated cook records
+- `PantryItem @@unique([userId, ingredient])`: prevents duplicate pantry entries at the DB level, making migration-time data repair unnecessary
+
+**Enum stability:**
+- `CookStatus` (STARTED/COMPLETED/ABANDONED), `UserRole` (free/premium/admin), `FlowTrigger`, `FlowStepType` are all additive enums — no existing values renamed or removed, safe to migrate without backfilling
+
+**Schema total (current state):**
+- 13 models, 4 enums, PostgreSQL dialect
+- All foreign keys have explicit `onDelete` directives — no implicit Prisma defaults in use
+## ASSET:migrate 2026-06-07 16:30 → Schema now 13 models, 4 enums; CookRecord + UserInsight added in branch 1-1-1; cascade deletes mostly correct
+
+**Current schema summary (branch 1-1-1):**
+
+| Model | New in 1-1-1? | Notes |
+|---|---|---|
+| User | no | Core model, 18 fields |
+| Recipe | no | ogImage Bytes column present |
+| RecipeReview | no | @@unique(userId+recipeId) |
+| SavedList / SavedListItem | no | Cascade on list delete |
+| DietaryPreference | no | No cascade from User (manual delete) |
+| PantryItem | no | @@unique(userId+ingredient), cascade from User |
+| Flow / UserFlowView | no | Onboarding flows system |
+| UserInsight | **yes** | @@unique(userId+category), cascade from User |
+| CookRecord | **yes** | Cascade from User and Recipe; JSON fields for ingredient lists |
+| PasswordResetToken / EmailVerificationToken | no | Manual delete in users route |
+
+**Enums:** `UserRole` (free/premium/admin) · `FlowTrigger` (first_login/manual) · `CookStatus` (STARTED/COMPLETED/ABANDONED)
+
+**Prisma migrations folder:** `/tmp/toifood-source/prisma/migrations/` exists, migrations tracked.
+
+**Cascade coverage:**
+- User → PantryItem, SavedList, UserFlowView, UserInsight, CookRecord: onDelete Cascade ✓
+- User → DietaryPreference, PasswordResetToken, EmailVerificationToken: no cascade (manual delete in route) — documented in DELETE /users/me
+- Recipe → SavedListItem, RecipeReview, CookRecord: onDelete Cascade ✓
+## ASSET:migrate 2026-06-07 10:00 → Prisma schema: 12 models, 3 enums, PostgreSQL on Mac mini M4
+
+Current authoritative schema (`prisma/schema.prisma`):
+
+**Enums:** `UserRole` (free/premium/admin) · `FlowTrigger` (first_login/manual) · `FlowStepType` (preferences/tip)
+
+**Models:**
+| Model | Key fields |
+|---|---|
+| User | id, email, name, googleId, appleId, passwordHash, role, defaultServings, recipeStyle, continentPreferences[], profileVisibility (JSON), emailVerified |
+| Recipe | id, userId, title, description, ingredients[], steps[], servings, dietaryTags[], emoji, provider, recipeStyle, mealType, pantryUsed[], cookTime, continent, shareToken (unique), ogImage (Bytes), videoId |
+| RecipeReview | id, userId, recipeId, stars — unique(userId+recipeId) |
+| SavedList | id, userId, name |
+| SavedListItem | listId+recipeId composite PK |
+| DietaryPreference | id, userId, filter |
+| PantryItem | id, userId, ingredient — unique(userId+ingredient) |
+| Flow | id, title, trigger, priority, isActive, adminOnly |
+| FlowStep | id, flowId, order, type, content (JSON) |
+| UserFlowView | id, userId, flowId, completedAt, skippedSteps[], responses (JSON) — unique(userId+flowId) |
+| PasswordResetToken | id, token (unique), userId, expiresAt |
+| EmailVerificationToken | id, token (unique), userId, expiresAt |
+
+**Deploy command:** `npx prisma migrate deploy` (Mac mini, jayreck account)
+**Generate client:** `npx prisma generate`
