@@ -10,6 +10,30 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-13 14:45 → Mac Mini is a pure Claude runner — no local state, skill outputs JSON, GitHub Actions writes
+
+Revised from earlier Cloudflare Tunnel entry. Mac Mini does not clone ts-back, write files, or push to GitHub. Its only job: receive POST → run `claude --print "/would-update ts-back"` → return JSON to caller.
+
+Skill redesigned to output structured JSON to stdout instead of writing to `$GITHUB_WORKSPACE`. GitHub Actions parses the JSON response and writes each entry to ts-back via GitHub API.
+
+Mac Mini persistent state: `~/.claude/` only (Claude Pro OAuth).
+
+**Pending:**
+- [ ] Redesign `would-update.md` skill — output JSON array `[{path, entry}]` instead of writing files
+- [ ] Simplify `toigroup-listener.js` — run claude, return stdout, done
+- [ ] Update `would-update.yml` — parse JSON response, write each entry to ts-back via GitHub API
+
+## ISSUE:toifood 2026-06-13 14:45 → retiring self-hosted runner — switching to Cloudflare Tunnel push model
+
+Self-hosted runner (`toifood-runner`, PM2 id 7) works but requires a persistent agent process and manual re-auth when Claude Pro token expires. New approach: GitHub Actions `ubuntu-latest` POSTs to `local.toigroup.co.nz/would-update` via Cloudflare Tunnel → Mac Mini listener runs skill locally → pushes back to GitHub. No runner agent needed. Cloudflare Tunnel (`toigroup-tunnel`, already running) handles inbound connectivity.
+
+**Pending:**
+- [ ] Add ingress rule to `~/.cloudflared/config.yml` for `local.toigroup.co.nz` → `localhost:3456`
+- [ ] Add CNAME DNS record in Cloudflare for `local.toigroup.co.nz`
+- [ ] Build `toifood-listener.js` on Mac Mini, add to PM2
+- [ ] Add `MACMINI_TRIGGER_TOKEN` to `toifood` org secrets
+- [ ] Update `would-update.yml` — swap `runs-on: [self-hosted, mac-mini]` for `ubuntu-latest` + curl step
+
 ## ISSUE:toifood 2026-06-13 → monorepo attempted and reverted — every analysis commit polluted -toifood git history; split repos confirmed as correct structure
 
 Absorbing ts-back into -toifood as a subdirectory was tried and reverted. Core problem: the weekly would-update workflow commits (CSV log, could/ entries) all land in -toifood's git history rather than ts-back's own history. Secondary risk: coupling -toifood and ts-back makes independent team access, archiving, or deprecation harder. Decision: keep repos split. -toifood is the hub/config layer; ts-back is a service layer with its own repo and workflow.

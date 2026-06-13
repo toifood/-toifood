@@ -10,6 +10,56 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-13 14:45 → final pipeline architecture — Mac Mini is pure Claude runner, GitHub Actions owns all state
+
+```
+GitHub Actions cron (ubuntu-latest)
+  → POST https://local.toigroup.co.nz/would-update
+    → toigroup-listener (Mac Mini, PM2)
+      → claude --dangerously-skip-permissions --print "/would-update ts-back"
+        → skill downloads source, generates 16 entries, prints JSON to stdout
+      → HTTP 200 { entries: [{path, entry}, ...] }
+  → GitHub Actions: for each entry → fetch file SHA → insert below anchor → PUT via GitHub API
+```
+
+| Component | Detail |
+|---|---|
+| Tunnel hostname | `local.toigroup.co.nz` |
+| Listener port | `3456` |
+| Listener PM2 name | `toigroup-listener` |
+| Auth | `X-Token` → `MACMINI_TRIGGER_TOKEN` |
+| Skill output | JSON array `[{path: "could/MIGRATE-ISSUE-2026Q2.md", entry: "## ISSUE:..."}]` |
+| Mac Mini state | `~/.claude/` only |
+| File writes | GitHub Actions via GitHub API (`TOIFOOD_CROSS_REPO_TOKEN`) |
+
+## ASSET:toifood 2026-06-13 14:45 → target pipeline architecture — GitHub Actions → Cloudflare Tunnel → toigroup-listener → Claude Code skill
+
+```
+GitHub Actions cron (ubuntu-latest)
+  → POST https://local.toigroup.co.nz/would-update
+    → Cloudflare Tunnel (toigroup-tunnel, PM2)
+      → Mac Mini localhost:3456 (toigroup-listener, PM2)
+        → git pull ~/toifood/ts-back
+        → GITHUB_WORKSPACE=~/toifood/ts-back
+        → claude --dangerously-skip-permissions --print "/would-update ts-back"
+          → skill writes to ~/toifood/ts-back/could/
+        → node ~/toifood/ts-back/would-update-content.js  ← pushes via GitHub API
+        → 200 OK back to GitHub Actions job
+```
+
+| Component | Detail |
+|---|---|
+| Tunnel hostname | `local.toigroup.co.nz` |
+| Listener port | `3456` |
+| Listener PM2 name | `toigroup-listener` |
+| Auth | `X-Token` header checked against `MACMINI_TRIGGER_TOKEN` env var |
+| GitHub secret | `MACMINI_TRIGGER_TOKEN` in `toifood` org |
+| Local ts-back clone | `~/toifood/ts-back` |
+| Push method | `would-update-content.js` via GitHub API (`TOIFOOD_CROSS_REPO_TOKEN`) |
+| Execution | Synchronous — GitHub job holds open until skill + push complete |
+
+No self-hosted runner agent required. Mac Mini only needs `toigroup-tunnel` and `toigroup-listener` running via PM2.
+
 ## ASSET:toifood 2026-06-13 → would-update skill now reads CUSTOM PROMPT + PATHS from each could/ file header as source of truth; TEST category added to ts-back
 
 `-toifood/.claude/commands/would-update.md` skill updated: hardcoded prompts and -MUST/ file dependency removed. For each category/type, Claude reads the `could/` file header to extract two optional fields — `CUSTOM PROMPT` (analysis focus) and `PATHS` (specific source files to prioritise). If both empty, Claude infers from the category name alone. All 28 existing could/ headers in ts-back updated with preset prompts. Four new TEST-ISSUE/ASSET files (Q2+Q3) created. To change analysis behaviour for any category, edit that category's could/ file header — no skill changes needed.

@@ -1,11 +1,10 @@
-Analyse the source codebase and write issue/asset entries to the target repo's could/ directory.
+Analyse the source codebase and output a JSON array of issue/asset entries for the target repo's could/ directory. Do not write any files — print only the JSON array to stdout.
 
 ## Arguments
 `$ARGUMENTS` is the target repo name, e.g. `ts-back`.
 
 ## Derived values
 - Source repo: `toifood-dev/ts-toifood-{suffix}` where suffix = strip `ts-` from `$ARGUMENTS`
-- Target: `$GITHUB_WORKSPACE/could/`
 - Categories: `migrate`, `price`, `recovery`, `usage`, `instruction`, `bug`, `analysis`, `test`
 
 ## Steps
@@ -58,36 +57,54 @@ Read from `$root`:
 - `README.md`
 - `package.json`
 - `prisma/schema.prisma` (skip if absent)
-- Full content of all files under `src/` — routes, middleware, services, entry points
+- Full content of all files under `src/`
 
 Hold all codebase content in context for all analyses.
 
-### 3. Generate analyses and write to could/
+### 3. Fetch could/ file headers from GitHub
 
-For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`, `bug`, `analysis`, `test` — generate both ISSUE and ASSET entries.
+For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`, `bug`, `analysis`, `test` — fetch the ISSUE and ASSET file headers from the target repo via GitHub API to read CUSTOM PROMPT and PATHS:
 
-For each category/type:
+```bash
+for type in ISSUE ASSET; do
+  for cat in MIGRATE PRICE RECOVERY USAGE INSTRUCTION BUG ANALYSIS TEST; do
+    path="could/${cat}-${type}-${QUARTER}.md"
+    gh api "repos/toifood/$ARGUMENTS/contents/${path}" --jq '.content' | base64 -d 2>/dev/null || echo ""
+  done
+done
+```
 
-1. Read the corresponding `could/{CATEGORY}-{TYPE}-${QUARTER}.md` file from `$GITHUB_WORKSPACE/could/`. Extract the header section (everything above the `####### <!-- ANCHOR MARKER` line):
-   - **CUSTOM PROMPT** — use as the analysis focus for this entry. If empty, infer from the category name.
-   - **PATHS** — if present, prioritise reading those specific paths from the source repo before the general `src/` scan. If empty, use the full `src/` scan from step 2.
+For each file, extract the header section (everything above the `####### <!-- ANCHOR MARKER` line):
+- **CUSTOM PROMPT** — use as the analysis focus. If empty, infer from the category name.
+- **PATHS** — if present, prioritise those specific paths from the source repo. If empty, use full `src/` scan.
 
-2. Generate a concise analysis grounded in the actual source code, shaped by the CUSTOM PROMPT.
+### 4. Generate analyses
 
-3. Format the entry:
-   ```
-   ## ISSUE:{category} {TS} → {one-line summary}
+For each of the 16 combinations (8 categories × ISSUE + ASSET), generate a concise analysis grounded in the actual source code, shaped by the CUSTOM PROMPT.
 
-   {analysis content}
-   ```
-   (use `ASSET:` prefix for asset type)
+Format each entry as:
+```
+## ISSUE:{category} {TS} → {one-line summary}
 
-4. Write to the file:
-   - Find the `####### <!-- ANCHOR MARKER` line
-   - Insert the new entry directly below it
-   - Never delete or edit entries below the marker
+{analysis content}
+```
+(use `ASSET:` prefix for asset type)
 
-### 4. Clean up
+### 5. Output JSON to stdout
+
+Print a single JSON array — nothing else before or after it:
+
+```json
+[
+  { "path": "could/MIGRATE-ISSUE-2026Q2.md", "entry": "## ISSUE:migrate {TS} → ..." },
+  { "path": "could/MIGRATE-ASSET-2026Q2.md", "entry": "## ASSET:migrate {TS} → ..." },
+  ...
+]
+```
+
+Use the computed `$QUARTER` value in each path. Emit exactly 16 objects.
+
+### 6. Clean up
 ```bash
 rm -rf /tmp/toifood-source.zip /tmp/toifood-source
 ```

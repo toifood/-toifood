@@ -1,0 +1,63 @@
+name: would-update
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC = 18:00 NZST
+  workflow_dispatch:
+    inputs:
+      quarter_override:
+        description: 'Override quarter (e.g. 2026Q3)'
+        type: string
+        required: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call toigroup-listener
+        id: call
+        run: |
+          BODY=$(jq -n --arg q "${{ inputs.quarter_override }}" '{"quarter_override": $q}')
+          RESPONSE=$(curl -sf \
+            -X POST https://local.toigroup.co.nz/would-update \
+            -H "X-Token: ${{ secrets.MACMINI_TRIGGER_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --max-time 600 \
+            -d "$BODY")
+          echo "response<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Write entries to ts-back
+        env:
+          GH_TOKEN: ${{ secrets.TOIFOOD_CROSS_REPO_TOKEN }}
+        run: |
+          echo '${{ steps.call.outputs.response }}' | jq -c '.[]' | while IFS= read -r item; do
+            PATH_=$(echo "$item" | jq -r '.path')
+            ENTRY=$(echo "$item" | jq -r '.entry')
+
+            # fetch current file content + sha
+            FILE=$(gh api "repos/toifood/ts-back/contents/${PATH_}" 2>/dev/null || echo '{}')
+            SHA=$(echo "$FILE" | jq -r '.sha // empty')
+            CURRENT=$(echo "$FILE" | jq -r '.content // ""' | base64 -d)
+
+            # insert entry below anchor marker
+            UPDATED=$(echo "$CURRENT" | awk -v entry="$ENTRY" '
+              /^####### <\!-- ANCHOR MARKER/ { print; print entry; next }
+              { print }
+            ')
+
+            # push via GitHub API
+            ENCODED=$(echo "$UPDATED" | base64 -w 0)
+            PAYLOAD=$(jq -n \
+              --arg msg "would-update: ${PATH_}" \
+              --arg content "$ENCODED" \
+              --arg sha "$SHA" \
+              '{message: $msg, content: $content, committer: {name: "would-update", email: "admin@toigroup.co.nz"}, sha: $sha}')
+
+            gh api "repos/toifood/ts-back/contents/${PATH_}" \
+              -X PUT -H "Content-Type: application/json" \
+              --input - <<< "$PAYLOAD"
+
+            echo "✅ ${PATH_}"
+          done
