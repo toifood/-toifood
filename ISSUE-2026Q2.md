@@ -10,6 +10,9 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-13 → -toifood owns functional pipeline code — violates separation of concerns
+
+`toigroup-listener.js`, `would-update.md` skill, and trigger/timing workflows all live in `toifood/-toifood`. This couples org-level docs to pipeline execution logic. When a second org is added, there is no clean home for shared pipeline code — it would either duplicate into each org or keep accumulating in `-toifood`.
 ## ISSUE:toifood 2026-06-13 → skill uses /tmp/ zip extraction — local filesystem dependency
 
 `would-update.md` steps 1–2 download a zipball to `/tmp/toifood-source.zip` and extract to `/tmp/toifood-source/`. Creates a local disk dependency on wherever the skill runs. Should read source files via GitHub API directly instead.
