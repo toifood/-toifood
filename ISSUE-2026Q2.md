@@ -10,6 +10,23 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-13 15:48 → RESOLVED — full pipeline live, GitHub Actions passes in 4s
+
+End-to-end confirmed working. GitHub Actions (ubuntu-latest) → POST `local.toigroup.co.nz/would-update` → 202 Accepted in 4s → skill running async on Mac Mini → writes 16 entries to `ts-back/could/` via GitHub API.
+
+Three blockers resolved:
+1. Cloudflare WAF `block-ollama-no-secret` rule — fixed by adding `x-secret: TOIGROUP_SECRET` header
+2. Cloudflare proxy 100s timeout — fixed by async 202 pattern (listener responds immediately, skill runs in background)
+3. Tunnel config pointing to Ollama port 11434 — updated to 3456
+
+## ISSUE:toifood 2026-06-13 15:23 → Cloudflare Access blocking local.toigroup.co.nz — 403 on tunnel requests
+
+`toigroup-listener` confirmed working locally (port 3456, 9-min full skill run, 1678 bytes returned). Tunnel config updated to route `local.toigroup.co.nz → localhost:3456`. But inbound requests via Cloudflare return 403 — Access policy on `*.toigroup.co.nz` is intercepting before the tunnel.
+
+**Options:**
+- A: Zero Trust → Access → Applications — add exception for `local.toigroup.co.nz` (X-Token header is sufficient auth)
+- B: Create Cloudflare Access service token — add `CF-Access-Client-Id` + `CF-Access-Client-Secret` headers to GitHub Actions curl (double auth, more locked down)
+
 ## ISSUE:toifood 2026-06-13 14:45 → Mac Mini is a pure Claude runner — no local state, skill outputs JSON, GitHub Actions writes
 
 Revised from earlier Cloudflare Tunnel entry. Mac Mini does not clone ts-back, write files, or push to GitHub. Its only job: receive POST → run `claude --print "/would-update ts-back"` → return JSON to caller.

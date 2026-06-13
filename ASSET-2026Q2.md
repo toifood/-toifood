@@ -10,6 +10,37 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-13 15:48 → pipeline fully operational — async 202 pattern, listener owns GitHub API writes
+
+```
+GitHub Actions cron (ubuntu-latest, ~4s job)
+  → POST local.toigroup.co.nz/would-update
+    → x-secret: TOIGROUP_SECRET  ← passes Cloudflare WAF rule
+    → X-Token: MACMINI_TRIGGER_TOKEN  ← listener auth
+  → 202 Accepted (immediate)
+  → [async] claude --print "/would-update ts-back"  (~10 min)
+    → 16 entries JSON
+  → [async] listener writes each entry to toifood/ts-back/could/ via GitHub API
+```
+
+| Component | Detail |
+|---|---|
+| GitHub Actions job duration | ~4s |
+| Skill run duration | ~10 min (async, Mac Mini) |
+| Cloudflare WAF bypass | `x-secret: TOIGROUP_SECRET` (org secret in toifood) |
+| Listener auth | `X-Token: MACMINI_TRIGGER_TOKEN` |
+| Tunnel config | `~/.cloudflared/toigroup.yml` → `localhost:3456` |
+| PM2 process | `toigroup-listener` (id 7) |
+| GitHub writes | `TOIFOOD_CROSS_REPO_TOKEN` via GitHub Contents API |
+
+**Hard rule:** Cloudflare proxy has ~100s timeout — never use synchronous pattern for long-running skills via Cloudflare Tunnel. Always respond 2xx immediately and run async.
+
+## ASSET:toifood 2026-06-13 15:23 → toigroup-listener confirmed working — full skill run 9 min, 1678 bytes
+
+Local test confirmed: `POST localhost:3456/would-update` → runs `claude --print "/would-update ts-back"` → returns JSON. Tunnel config (`~/.cloudflared/toigroup.yml`) updated from port `11434` → `3456`. PM2 processes `toigroup-listener` (id 7) and `toigroup-tunnel` (id 4) both online.
+
+Blocker: Cloudflare Access 403 on `local.toigroup.co.nz` — pending Access policy fix before end-to-end test.
+
 ## ASSET:toifood 2026-06-13 14:45 → final pipeline architecture — Mac Mini is pure Claude runner, GitHub Actions owns all state
 
 ```
